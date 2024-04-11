@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Tournament {
+  id        Int      @id @default(autoincrement())
+  name      String
+  sport     String
+  teams     Team[]
+  matches   Match[]   @relation("TournamentToMatch")
+  createdAt DateTime @default(now())
+}
+
+model Team {
+  id          Int      @id @default(autoincrement())
+  name        String
+  tournament  Tournament @relation(fields: [tournamentId], references: [id])
+  tournamentId Int
+  matches1    Match[]  @relation("MatchToTeam1")
+  matches2    Match[]  @relation("MatchToTeam2")
+  wins        Match[]  @relation("MatchToWinner")
+  createdAt   DateTime @default(now())
+}
+
+model Match {
+  id          Int      @id @default(autoincrement())
+  tournament  Tournament @relation("TournamentToMatch", fields: [tournamentId], references: [id])
+  tournamentId Int
+  team1       Team     @relation("MatchToTeam1", fields: [team1Id], references: [id])
+  team1Id     Int
+  team2       Team     @relation("MatchToTeam2", fields: [team2Id], references: [id])
+  team2Id     Int
+  winner      Team?    @relation("MatchToWinner", fields: [winnerId], references: [id])
+  winnerId    Int?
+  createdAt   DateTime @default(now())
+}

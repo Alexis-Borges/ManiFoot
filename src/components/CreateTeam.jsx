@@ -1,0 +1,78 @@
+import { useState, useEffect } from 'react'
+import axios from 'axios'
+
+function CreateTeam() {
+  const [tournaments, setTournaments] = useState([])
+  const [teams, setTeams] = useState([])
+  const [tournamentId, setTournamentId] = useState('')
+  const [name, setName] = useState('')
+  const [errorMessage, setErrorMessage] = useState('') 
+
+  const fetchTeams = () => {
+    axios.get('http://localhost:3001/teams')
+      .then(response => {
+        setTeams(response.data)
+      })
+  }
+
+  useEffect(() => {
+    axios.get('http://localhost:3001/tournaments')
+      .then(response => {
+        setTournaments(response.data)
+      })
+    fetchTeams()
+  }, [])
+
+  const handleSubmit = event => {
+    event.preventDefault()
+
+    axios.post('http://localhost:3001/teams', { tournamentId, name })
+      .then(() => {
+        setTournamentId('')
+        setName('')
+        fetchTeams() 
+      })
+  }
+
+  const handleDelete = (id) => {
+    axios.delete(`http://localhost:3001/teams/${id}`)
+      .then(() => {
+        fetchTeams() 
+      })
+      .catch(() => {
+        setErrorMessage('Cannot delete team because it still has associated matches.')
+      })
+  }
+
+  return (
+    <div className="min-h-screen bg-blue-400 bg-opacity-20 flex items-center justify-center">
+      <div className="w-full max-w-md bg-white rounded overflow-hidden shadow-lg p-6 space-y-10">
+        <h1 className="text-4xl font-bold text-center">Create Team</h1>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <select value={tournamentId} onChange={e => setTournamentId(e.target.value)} required 
+            className="w-full px-3 py-2 placeholder-gray-500 text-gray-900 rounded focus:outline-none focus:shadow-outline">
+            <option value="">Select Tournament</option>
+            {tournaments.map(tournament => (
+              <option key={tournament.id} value={tournament.id}>{tournament.name}</option>
+            ))}
+          </select>
+          <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Team Name" required 
+            className="w-full px-3 py-2 placeholder-gray-500 text-gray-900 rounded focus:outline-none focus:shadow-outline"/>
+          <button type="submit" className="w-full px-3 py-2 text-white bg-blue-600 rounded hover:bg-blue-500">Create Team</button>
+        </form>
+        <h2 className="text-2xl font-bold text-center">Teams</h2>
+        <ul className="space-y-4">
+          {teams.map(team => (
+            <li key={team.id} className="flex justify-between items-center border-b pb-2">
+              <span>{team.name}</span>
+              <button onClick={() => handleDelete(team.id)} className="text-white bg-red-500 rounded px-2 py-1 hover:bg-red-400">Delete</button>
+            </li>
+          ))}
+        </ul>
+        {errorMessage && <p className="text-red-500">{errorMessage}</p>}
+      </div>
+    </div>
+  )
+}
+
+export default CreateTeam
